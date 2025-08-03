@@ -1,0 +1,8 @@
+include README.md
+include LICENSE
+recursive-include dev_toolkit/static *
+recursive-include dev_toolkit/templates *
+exclude .gitignore
+exclude .pypirc
+recursive-exclude venv *
+recursive-exclude tests *

@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Database Connection Mapper</title>
+        <!-- Use Tailwind CSS for modern, responsive styling -->
+        <script src="https://cdn.tailwindcss.com"></script>
+        <style>
+            /* Use Inter font for a clean, modern look */
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+            body {
+                font-family: 'Inter', sans-serif;
+            }
+            .table-card {
+                width: 250px;
+                background-color: #1e293b;
+                padding: 1rem;
+                border-radius: 0.75rem;
+                color: white;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                position: absolute;
+                cursor: grab;
+                transition: box-shadow 0.2s ease-in-out;
+            }
+            .table-card:active {
+                cursor: grabbing;
+                box-shadow: 0 8px 10px rgba(0, 0, 0, 0.2);
+            }
+            .table-header {
+                font-weight: 600;
+                font-size: 1.125rem;
+                margin-bottom: 0.5rem;
+                border-bottom: 1px solid #334155;
+                padding-bottom: 0.5rem;
+            }
+            .field-list .field {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 0.5rem 0;
+                border-bottom: 1px dashed #475569;
+            }
+            .field-list .field:last-child {
+                border-bottom: none;
+            }
+            .relation-field-pin {
+                width: 12px;
+                height: 12px;
+                background: #6366f1;
+                border-radius: 50%;
+                cursor: pointer;
+                position: relative;
+                z-index: 10;
+            }
+            .relation-line {
+                fill: none;
+                stroke: #6366f1;
+                stroke-width: 2px;
+                pointer-events: none;
+                transition: stroke-width 0.2s ease-in-out;
+            }
+            .relation-line:hover {
+                stroke-width: 3px;
+            }
+            .visualization-canvas {
+                position: relative;
+                flex-grow: 1;
+                overflow: auto;
+                min-height: 500px;
+            }
+        </style>
+    </head>
+    <body class="bg-slate-900 text-white p-6">
+        <div class="panel bg-slate-800 rounded-xl p-6 h-full flex flex-col">
+        <h2 class="text-2xl font-semibold border-b border-slate-700 pb-4 mb-6 text-white">
+            <span class="mr-2">🔗</span>Database Connection Mapper
+        </h2>
+        <div class="visualization-canvas relative flex-grow overflow-hidden rounded-lg border border-slate-700" id="visualization-container">
+            <!-- The SVG canvas is where we will draw our connection lines -->
+            <svg class="svg-canvas absolute top-0 left-0 w-full h-full pointer-events-none" id="relation-svg">
+                <defs>
+                    <marker id="arrowhead" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                        <path d="M 0 0 L 10 5 L 0 10 z" fill="#6366f1" />
+                    </marker>
+                </defs>
+            </svg>
+
+            <!-- The table cards will be dynamically rendered and positioned here -->
+            {% for model in db_models %}
+                <div class="table-card absolute" data-app-label="{{ model.app_label }}" data-model-name="{{ model.model_name }}" id="card-{{ model.app_label }}-{{ model.model_name }}">
+                    <div class="table-header">{{ model.verbose_name }}</div>
+                    <div class="field-list">
+                        {% for field in model.fields %}
+                            <div class="field" data-field-name="{{ field.name }}" id="field-{{ model.app_label }}-{{ model.model_name }}-{{ field.name }}">
+                                <span class="field-name">{{ field.name }}</span>
+                                <span class="field-type text-slate-400">{{ field.field_type }}</span>
+                                {% if field.is_relation %}
+                                    <span class="relation-field-pin" data-related-app="{{ field.related_model.app_label }}" data-related-model="{{ field.related_model.model_name }}"></span>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    <script>
+        // This script handles the interactive visualization of the database connections.
+        window.onload = function() {
+            const container = document.getElementById('visualization-container');
+            const svgCanvas = document.getElementById('relation-svg');
+            const cards = document.querySelectorAll('.table-card');
+
+            let activeCard = null;
+            let offsetX, offsetY;
+
+            // Simple grid layout for initial card positions
+            function initializeLayout() {
+                const layoutPadding = 50;
+                const gridSpacingX = 350;
+                const gridSpacingY = 250;
+                cards.forEach((card, index) => {
+                    const row = Math.floor(index / 3);
+                    const col = index % 3;
+                    card.style.left = `${layoutPadding + col * gridSpacingX}px`;
+                    card.style.top = `${layoutPadding + row * gridSpacingY}px`;
+                });
+                drawRelations();
+            }
+
+            // Calculates the center point of a pin element
+            function getPinCenter(pinElement) {
+                const containerRect = container.getBoundingClientRect();
+                const pinRect = pinElement.getBoundingClientRect();
+                const x = pinRect.left + pinRect.width / 2 - containerRect.left;
+                const y = pinRect.top + pinRect.height / 2 - containerRect.top;
+                return { x, y };
+            }
+
+            // Draws the SVG lines connecting the relationship pins to their target cards
+            function drawRelations() {
+                // Clear all existing lines
+                svgCanvas.innerHTML = `<defs>
+                    <marker id="arrowhead" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                        <path d="M 0 0 L 10 5 L 0 10 z" fill="#6366f1" />
+                    </marker>
+                </defs>`;
+
+                cards.forEach(sourceCard => {
+                    const relationPins = sourceCard.querySelectorAll('.relation-field-pin');
+                    relationPins.forEach(pin => {
+                        const relatedApp = pin.getAttribute('data-related-app');
+                        const relatedModel = pin.getAttribute('data-related-model');
+                        const targetCardId = `card-${relatedApp}-${relatedModel}`;
+                        const targetCard = document.getElementById(targetCardId);
+
+                        if (targetCard) {
+                            const sourcePos = getPinCenter(pin);
+                            const containerRect = container.getBoundingClientRect();
+                            const targetRect = targetCard.getBoundingClientRect();
+                            const targetCenterX = targetRect.left + targetRect.width / 2 - containerRect.left;
+                            const targetCenterY = targetRect.top + targetRect.height / 2 - containerRect.top;
+
+                            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                            line.setAttribute('x1', sourcePos.x);
+                            line.setAttribute('y1', sourcePos.y);
+                            line.setAttribute('x2', targetCenterX);
+                            line.setAttribute('y2', targetCenterY);
+                            line.setAttribute('class', 'relation-line');
+                            line.setAttribute('marker-end', 'url(#arrowhead)');
+                            svgCanvas.appendChild(line);
+                        }
+                    });
+                });
+            }
+
+            // Event listeners for dragging functionality
+            container.addEventListener('mousedown', e => {
+                const card = e.target.closest('.table-card');
+                if (card) {
+                    activeCard = card;
+                    offsetX = e.clientX - card.getBoundingClientRect().left;
+                    offsetY = e.clientY - card.getBoundingClientRect().top;
+                    card.style.zIndex = 1000; // Bring to front
+                }
+            });
+
+            container.addEventListener('mousemove', e => {
+                if (activeCard) {
+                    e.preventDefault();
+                    const newLeft = e.clientX - offsetX - container.getBoundingClientRect().left;
+                    const newTop = e.clientY - offsetY - container.getBoundingClientRect().top;
+                    activeCard.style.left = `${newLeft}px`;
+                    activeCard.style.top = `${newTop}px`;
+                    drawRelations();
+                }
+            });
+
+            document.addEventListener('mouseup', () => {
+                if (activeCard) {
+                    activeCard.style.zIndex = ''; // Reset z-index
+                    activeCard = null;
+                }
+            });
+
+            // Initialize the layout and listeners
+            initializeLayout();
+            window.addEventListener('resize', drawRelations);
+        };
+    </script>
+    </body>
+</html>

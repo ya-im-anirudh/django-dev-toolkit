@@ -1,0 +1,93 @@
+{% extends 'dev_toolkit/base_template.html' %}
+{% load static %}
+
+{% block content %}
+    <body class="p-8 bg-slate-900 text-slate-200">
+        <div class="container mx-auto grid md:grid-cols-2 gap-8 max-w-7xl">
+            <!-- API Configuration Panel -->
+            <div class="panel bg-slate-800 rounded-xl p-6 flex flex-col gap-6">
+                <h2 class="text-2xl font-semibold border-b border-slate-700 pb-4 text-white">
+                    <span class="mr-2">⚙️</span>API Configuration
+                </h2>
+                <div id="status-container"></div>
+                <div class="space-y-4">
+                    <div class="flex flex-col gap-2">
+                        <label for="api-name" class="font-medium text-sm text-slate-400">API Name</label>
+                        <input type="text" id="api-name" placeholder="e.g., Get All Users" class="bg-slate-700 border border-slate-600 text-slate-200 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <label for="api-endpoint" class="font-medium text-sm text-slate-400">Endpoint URL</label>
+                        <input type="text" id="api-endpoint" placeholder="/api/v1/users/" class="bg-slate-700 border border-slate-600 text-slate-200 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <label for="api-method" class="font-medium text-sm text-slate-400">Request Method</label>
+                        <select id="api-method" class="bg-slate-700 border border-slate-600 text-slate-200 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
+                            <option>GET</option><option>POST</option><option>PUT</option><option>PATCH</option><option>DELETE</option>
+                        </select>
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <label for="api-description" class="font-medium text-sm text-slate-400">Description</label>
+                        <textarea id="api-description" rows="2" placeholder="A brief description of this API endpoint." class="bg-slate-700 border border-slate-600 text-slate-200 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all"></textarea>
+                    </div>
+                </div>
+
+                <!-- Request Body Section (Dynamically shown) -->
+                <div id="request-body-section" class="flex-col gap-2 hidden">
+                    <label for="api-request-body" class="font-medium text-sm text-slate-400">Request Body (JSON)</label>
+                    <textarea id="api-request-body" rows="10" placeholder='{ "id": 1, "name": "New Item" }' class="bg-slate-700 border border-slate-600 text-slate-200 px-4 py-2 rounded-lg font-mono text-sm resize-y focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all"></textarea>
+                </div>
+
+                <!-- Response Body Section -->
+                <div class="flex flex-col gap-2">
+                    <label for="api-response-body" class="font-medium text-sm text-slate-400">Customizable Response Body (JSON)</label>
+                    <textarea id="api-response-body" rows="10" placeholder='{ "status": "success" }' class="bg-slate-700 border border-slate-600 text-slate-200 px-4 py-2 rounded-lg font-mono text-sm resize-y focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all"></textarea>
+                </div>
+
+                <button id="save-api-btn" class="bg-sky-600 text-white font-bold py-3 rounded-lg hover:bg-sky-700 transition-colors">
+                    Save API Configuration
+                </button>
+            </div>
+
+            <!-- Dynamic JSON Structure Builder Panel -->
+            <div class="panel bg-slate-800 rounded-xl p-6 flex flex-col gap-6">
+                <h2 class="text-2xl font-semibold border-b border-slate-700 pb-4 text-white">
+                    <span class="mr-2">📝</span>Dynamic JSON Builder
+                </h2>
+                <div class="space-y-4">
+                    <div class="flex flex-col gap-2">
+                        <label for="is-list" class="font-medium text-sm text-slate-400">Generated data is a list (many)?</label>
+                        <select id="is-list" class="bg-slate-700 border border-slate-600 text-slate-200 px-4 py-2 rounded-lg max-w-[200px] focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
+                            <option value="false">False (single object)</option>
+                            <option value="true">True (array of objects)</option>
+                        </select>
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <label for="json-target" class="font-medium text-sm text-slate-400">Apply generated JSON to:</label>
+                        <select id="json-target" class="bg-slate-700 border border-slate-600 text-slate-200 px-4 py-2 rounded-lg max-w-[200px] focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
+                            <option value="response">Response Body</option>
+                            <option value="request">Request Body</option>
+                        </select>
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <label for="model-select" class="font-medium text-sm text-slate-400">Add Model Fields:</label>
+                        <select id="model-select" class="bg-slate-700 border border-slate-600 text-slate-200 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all">
+                            <option value="">-- Select a Model --</option>
+                            <!-- Django template loop here for models -->
+                            {% for model in models %}
+                                <option value="{{ model.app_label }}.{{ model.model_name }}">{{ model.verbose_name }} ({{ model.app_label }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div id="fields-container" class="bg-slate-900 border border-slate-700 rounded-lg p-4 h-[400px] overflow-y-auto space-y-4">
+                    Select a model to begin.
+                </div>
+
+                <button id="add-to-json-btn" class="bg-slate-600 text-white font-bold py-3 rounded-lg hover:bg-slate-700 transition-colors">
+                    Add Generated JSON
+                </button>
+            </div>
+        </div>
+    </body>
+{% endblock %}

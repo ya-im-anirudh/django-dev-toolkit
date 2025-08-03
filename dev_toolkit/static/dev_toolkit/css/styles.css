@@ -1,0 +1,58 @@
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #0f172a;
+    color: #e2e8f0;
+}
+.panel {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+.nav-link.active {
+    border-bottom: 2px solid #38bdf8;
+    color: #fff;
+}
+/* Custom scrollbar for better aesthetics */
+::-webkit-scrollbar {
+    width: 8px;
+}
+::-webkit-scrollbar-track {
+    background: #1e293b;
+}
+::-webkit-scrollbar-thumb {
+    background: #475569;
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+}
+/* Pointer cursor for clickable elements with navigate-to attribute */
+[navigate-to] {
+    cursor: pointer;
+}
+
+.table-card {
+    position: absolute;
+    width: 250px;
+    background-color: #1e293b;
+    padding: 1rem;
+    border-radius: 0.75rem;
+    color: white;
+    cursor: grab;
+}
+.table-header {
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+.field-list .field {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.25rem 0;
+}
+.relation-field-pin {
+    width: 10px;
+    height: 10px;
+    background: #6366f1;
+    border-radius: 50%;
+}
+.relation-line {
+    fill: none;
+}

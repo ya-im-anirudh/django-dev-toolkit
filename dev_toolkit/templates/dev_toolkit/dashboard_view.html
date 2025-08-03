@@ -1,0 +1,47 @@
+{% extends 'dev_toolkit/base_template.html' %}
+{% load static %}
+
+{% block content %}
+    <div class="container mx-auto max-w-5xl">
+
+        <!-- main container -->
+        <div id="tools-page" class="panel bg-slate-800 rounded-xl p-6">
+
+            <!-- heading -->
+            <h2 class="text-2xl font-semibold border-b border-slate-700 pb-4 mb-6 text-white">
+                <span class="mr-2">🛠️</span>Available Tools
+            </h2>
+
+            <!-- Tool Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                <!-- Dummy API Creator Card -->
+                <div class="bg-slate-700 rounded-xl p-6 flex flex-col gap-4">
+                    <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                        <span class="text-sky-400">⚙️</span>Dummy API Creator
+                    </h3>
+                    <p class="text-slate-400 text-sm">
+                        A complete tool for creating, reading, updating, and deleting dummy APIs for testing and development.
+                    </p>
+                    <a href="{% url 'dummy_api:dummy_api_dynamic' view_type='list' %}" id="go-to-api-list" class="mt-2 inline-block bg-sky-600 text-white text-center font-bold py-2 px-4 rounded-lg hover:bg-sky-700 transition-colors">
+                        Go to Tool
+                    </a>
+
+                </div>
+
+                <!-- Database Connection Mapper Card (Example) -->
+                <div class="bg-slate-700 rounded-xl p-6 flex flex-col gap-4">
+                    <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                        <span class="text-sky-400">🔗</span>Database Connection Mapper
+                    </h3>
+                    <p class="text-slate-400 text-sm">
+                        Map and visualize your database schema, making it easy to understand and manage relationships.
+                    </p>
+                    <a href="{% url 'db_connection_mapper:db_connection_mapper_view' %}" id="go-to-db-connection-mapper" class="mt-2 inline-block bg-slate-600 text-white text-center font-bold py-2 px-4 rounded-lg hover:bg-slate-700 transition-colors">
+                        Go to Tool
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
