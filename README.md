@@ -70,3 +70,12 @@ INSTALLED_APPS = [
 ]
 ```
 
+## ☕ Support the Project
+
+If you find this project helpful, you can support development by buying me a coffee!  
+<br>
+<a href="https://www.buymeacoffee.com/anirudh_mk" target="_blank">
+    <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" width="200" />
+</a>
+
+
